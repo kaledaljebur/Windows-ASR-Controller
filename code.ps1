@@ -1,8 +1,17 @@
-# Created by Kaled Aljebur for basic students' practising of PowerShell and GPOs.
-# This code will control the Attack Surface Reduction Rules.
+# Created by Kaled Aljebur as part of basic PowerShell practising with GPOs.
+# This program is part of labs for Cert IV Cybersecurity students at Tafe QLD Australia.
+# This program will manage the Attack Surface Reduction Rules, 19 updated rules from Microsoft.
+# https://learn.microsoft.com/en-us/defender-endpoint/attack-surface-reduction-rules-reference#asr-rule-to-guid-matrix
+# The management include:
+# List the status of all installed rules.
+# Enable all rules.
+# Disable all rules.
+# Audit mode for all rules.
+# Apply an action for a specific rule.
 ##################
-# Windows Defender Antivirus must be enabled for ASR rules to work.
-# Ensure that your version of Windows supports ASR rules (Windows 10 Pro, Enterprise, or Education).
+# As a requirements:
+# Windows Defender must be enabled.
+# This program should be running with administrator privileges.
 ##################
 # Local GPO commands available here:
 # https://learn.microsoft.com/en-us/defender-endpoint/enable-attack-surface-reduction#powershell
@@ -12,6 +21,7 @@
 # \Microsoft Defender Exploit Guard\Attack Surface Reduction	
 
 $rulesID = @(
+    # Disable any not needed rules, no need to edit the program, just make sure only the last rule dont ends comma.
     @("1", "Block abuse of exploited vulnerable signed drivers", "56a863a9-875e-4185-98a7-b882c64b5ce5"),
     @("2", "Block Adobe Reader from creating child processes", "7674ba52-37eb-4a4f-a9a1-f0f9a1619a2c"),
     @("3", "Block all Office applications from creating child processes", "d4f940ab-401b-4efc-aadc-ad5f3c50688a"),
@@ -27,39 +37,50 @@ $rulesID = @(
     @("13", "Block process creations originating from PSExec and WMI commands", "d1e49aac-8f56-4280-b9ba-993a6d77406c"),
     @("14", "Block untrusted and unsigned processes that run from USB", "b2b3f03d-6a65-4f7b-a9c7-1c7ef74a9ba4"),
     @("15", "Block Win32 API calls from Office macros", "92e97fa1-2edf-4476-bdd6-9dd0b4dddc7b"),
-    @("16", "Use advanced protection against ransomware", "c1db55ab-c21a-4637-bb3f-a12568109d35")
+    @("16", "Use advanced protection against ransomware", "c1db55ab-c21a-4637-bb3f-a12568109d35"),
+    @("18", "Block rebooting machine in Safe Mode (preview)", "33ddedf1-c6e0-47cb-833e-de6133960387"),
+    @("17", "Block use of copied or impersonated system tools (preview)", "c0033c00-d16d-4114-a5a0-dc9b3a7d2ceb"),
+    @("19", "Block Webshell creation for Servers", "a8f5898e-1dc8-49a9-9878-85004b8a61e6")
 )
 
 function ruleIDSearch($value) {
-    for ($i = 0; $i -le 15 ; $i++) {
+    for ($i = 0; $i -le $rulesID.Count - 1 ; $i++) {
         if ($rulesID[$i][2] -eq $value) {
             $result = $rulesID[$i][1]
-            return $result
-            break
+            return $result            
         }
     }
 }
 
 function appliedRulesStatus {
-    Write-Host "The status table will be printed after quitting this program!"
-    # $asrRules = Get-MpPreference
-    # $ruleActions = $asrRules.AttackSurfaceReductionRules_Actions
-    # $ruleIds = $asrRules.AttackSurfaceReductionRules_Ids
-
-    # for ($i = 0; $i -lt $ruleIds.Count; $i++) {
-    #     [PSCustomObject]@{
-    #         RuleID = $ruleIds[$i]
-    #         Name   = ruleIDSearch($ruleIds[$i])
-    #         Action = $ruleActions[$i]
-    #     }
-    # }
-    # break
-    foreach ($item in $rulesID) {
-        
-        $result = $item[0] + ": " + $item[1]
-        Write-Host "$result"
+    Write-Host
+    Write-Host "Make sure the window is wide enough to see full table, you may need to re-print!"
+    Write-Host "If no output, then no rules been added before, you can start by disable all rules, then print again."
+    Write-Host
+    $asrRules = Get-MpPreference
+    $ruleActions = $asrRules.AttackSurfaceReductionRules_Actions
+    $installedRuleIds = $asrRules.AttackSurfaceReductionRules_Ids
+    $output = @()
+    for ($i = 0; $i -lt $installedRuleIds.Count; $i++) {
+        # The following table display is better that the below disabled one:
+        $ruleID = $installedRuleIds[$i]
+        $status = $ruleActions[$i]
+        $name = ruleIDSearch($installedRuleIds[$i])
+        switch ($status) {
+            '0' { $status = "Disabled" }
+            '1' { $status = "Enabled" }
+            '2' { $status = "Audit" }
+        }
+        $output += @{RuleID = $ruleID; Status = $status; Name = $name }
+        # The following table display is slower and it will display when exit:
+        # [PSCustomObject]@{
+        #     RuleID = $installedRuleIds[$i]
+        #     Action = $ruleActions[$i]
+        #     Name   = ruleIDSearch($installedRuleIds[$i])
+        # }
     }
 
+        $output | ForEach { [PSCustomObject]$_ } | Format-Table -AutoSize
 }
 
 function allRulesMenu {    
@@ -84,10 +105,10 @@ function showMenu {
 }
 
 function updateGPO($valueName, $value) {
-    switch ($value){
-        '0'{$action="Disabled"}
-        '1'{$action="Enabled"}
-        '2'{$action="Audit"}
+    switch ($value) {
+        '0' { $action = "Disabled" }
+        '1' { $action = "Enabled" }
+        '2' { $action = "AuditMode" }
     }
     # $asrRuleAction = switch ($action) {
     #     "Block"     { [Microsoft.Management.Infrastructure.CimInstance]::Create('Microsoft.Security.Policies.ActionTypes.Block') }
@@ -105,29 +126,33 @@ function updateGPO($valueName, $value) {
     # Set-MpPreference -AttackSurfaceReductionRules_Ids $valueName.ToString() -AttackSurfaceReductionRules_Actions Disabled
     # Write-Host $valueName.ToString() $action
     # Write-Host "Name "$valueName "Action "$action "last "$asrRuleAction
-    Set-MpPreference -AttackSurfaceReductionRules_Ids $valueName -AttackSurfaceReductionRules_Actions $action
+    Add-MpPreference -AttackSurfaceReductionRules_Ids $valueName -AttackSurfaceReductionRules_Actions $action
+    $ruleName=ruleIDSearch($valueName)
     Write-Host "RuleID:" $valueName 
-    Write-Host "New status:" $action 
-
-    # $valueName.GetType();
+    Write-Host "RuleName:" $ruleName
+    Write-Host "Applied status:" $action 
+    Write-Host
 }
 
 function updateGPOAll($value) {
     switch ($value) {            
         'A' { 
-            for ($i = 0; $i -le 15 ; $i++) {
+            for ($i = 0; $i -le $rulesID.Count - 1 ; $i++) {
                 updateGPO $rulesID[$i][2] 2
+                # You can also use the below:
+                # (Get-MpPreference).AttackSurfaceReductionRules_Ids | 
+                # Foreach {Add-MpPreference -AttackSurfaceReductionRules_Ids $_ -AttackSurfaceReductionRules_Actions AuditMode}
             }
             Write-Host "Done, all rules are in Audit!" 
         }
         'D' { 
-            for ($i = 0; $i -le 15 ; $i++) {
+            for ($i = 0; $i -le $rulesID.Count - 1 ; $i++) {
                 updateGPO $rulesID[$i][2] 0
             }
             Write-Host "Done, all rules are Disabled!" 
         }
         'E' { 
-            for ($i = 0; $i -le 15 ; $i++) {
+            for ($i = 0; $i -le $rulesID.Count - 1 ; $i++) {
                 updateGPO $rulesID[$i][2] 1
             }
             Write-Host "Done, all rules are Enabled!" 
@@ -147,15 +172,15 @@ function subMenu ($valueNUmber) {
     Write-Host "B: Back to main menu"
     Write-Host "**************************************"
     Write-Host
-    $input = Read-Host "Please enter your option"
-    switch -Regex ($input) {            
-        { 0..2 -contains $_ } { updateGPO $rulesID[$valueNUmber][2] $input }
+    $inputOption = Read-Host "Please enter your option"
+    switch -Regex ($inputOption) {            
+        { 0..2 -contains $_ } { updateGPO $rulesID[$valueNUmber][2] $inputOption }
         'B' { mainMenu }
         'Q' {
             Write-Host
             Write-Host "Thanks, email me on kaledaljebur@gmail.com for any questions or suggestions ... " 
             Write-Host
-            Write-Output "Press any key to close this window..."
+            Write-Output "Press any key to close this window ..."
             Read-Host
             exit 
         }
@@ -166,16 +191,16 @@ function subMenu ($valueNUmber) {
 function mainMenu {
     while ($true) {
         showMenu
-        $input = Read-Host "Please enter your option"
-        switch -Regex ($input) {            
-            { 1..16 -contains $_ } { subMenu($input) }
-            { 'A', 'D', 'E' -contains $_ } { updateGPOAll $input }
+        $inputOption = Read-Host "Please enter your option"
+        switch -Regex ($inputOption) {            
+            { 1..16 -contains $_ } { subMenu($inputOption) }
+            { 'A', 'D', 'E' -contains $_ } { updateGPOAll $inputOption }
             'P' { appliedRulesStatus }
             'Q' {
                 Write-Host
                 Write-Host "Thanks, email me on kaledaljebur@gmail.com for any questions or suggestions ... " 
                 Write-Host
-                Write-Output "Press any key to close this window..."
+                Write-Output "Press any key to close this window ..."
                 Read-Host
                 exit 
             }
@@ -185,4 +210,21 @@ function mainMenu {
         $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") | Out-Null   
     }
 }
+
+function elevatedPrivilegesCheck {
+    $WindowsPrincipal = New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())
+    $notAdmin = $WindowsPrincipal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
+    
+    if (-not $notAdmin) {
+        Write-Host
+        Write-Host "This program is not running with administrator privileges!"
+        Write-Host "Please re-run it with administrator privileges."
+        Write-Host
+        Write-Host "Press any key to exit ..."
+        Read-Host
+        exit
+    }     
+}
+elevatedPrivilegesCheck
 mainMenu
+
