@@ -81,7 +81,6 @@ function appliedRulesStatus {
         #     Name   = ruleIDSearch($installedRuleIds[$i])
         # }
     }
-
     $output | ForEach { [PSCustomObject]$_ } | Format-Table -AutoSize
     # Export the status table:
     
@@ -103,18 +102,75 @@ function allRulesMenu {
     }
 }
 
+function ruleExclusions ($ruleId, $excluded){    
+    Set-MpPreference -AttackSurfaceReductionRules_Ids $ruleId -AttackSurfaceReductionOnlyExclusions -Exclusions $excluded
+}
+
+function rulesExclusionsAll($excluded) {    
+    # Set-MpPreference -AttackSurfaceReductionOnlyExclusions -Exclusions $excluded
+    Write-Host $excluded
+}
+
+function rulesExclusionsAllStatus {
+    Read-Host
+    Get-MpPreference | Select-Object AttackSurfaceReductionOnlyExclusions  
+}
+
+function exclusionMenu{
+    while ($true) {
+        showExclusionMenu
+        $inputOption = Read-Host "Please enter your option"
+        switch ($inputOption) {            
+            # { 1..$rulesID.Count -contains $_ } { actionMenu($inputOption) }
+            # { 'A', 'D', 'E', 'W' -contains $_ } { updateGPOAll $inputOption }
+            'P' { rulesExclusionsAllStatus }
+            'B' { mainMenu }
+            'A' {$exclusion = Read-Host "Enter the exclusion value"
+                rulesExclusionsAll $exclusion}
+            'Q' {
+                Write-Host
+                Write-Host "Thanks, email me on kaledaljebur@gmail.com for any questions or suggestions ... " 
+                Write-Host
+                Write-Output "Press any key to close this window ..."
+                Read-Host
+                exit 
+            }
+            'H' { helpMenu }
+            default { Write-Host "The entered option is not in the menu, please select from the menu!" }
+        }
+        Write-Host "Press any key to list the menu again ..."
+        $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") | Out-Null   
+    }
+}
+function showExclusionMenu {
+    Clear-Host
+    Write-Host
+    Write-Host "************************Exclusion Menu************************"
+    Write-Host "*******Select an action from this menu*******            "
+    Write-Host "  Q: Quit the program"
+    Write-Host "  H: for help"
+    Write-Host "  P: Print the status of all applied exclusions"
+    Write-Host "  A: Add exclusion for all rules"
+    Write-Host "  B: Back to main menu"  
+    Write-Host
+    Write-Host "***Or select a specific rule to be actioned***           "
+    allRulesMenu
+    Write-Host "*************************************************************"
+    Write-Host    
+}
 function showMainMenu {
     Clear-Host
     Write-Host
     Write-Host "**************************Main Menu**************************"
     Write-Host "*******Select an action from this menu*******            "
     Write-Host "  Q: Quit the program"
+    Write-Host "  H: for help"
     Write-Host "  P: Print the status of all applied rules, and export in Jason file"
+    Write-Host "  X: For exclusion actions" 
     Write-Host "  E: Enable all rules"
     Write-Host "  D: Create disabled rules, or disable all available rules"
     Write-Host "  A: Put all rules in Audit mode"
     Write-Host "  W: Put all rules in Warn mode"
-    Write-Host "  H: for help"
     Write-Host
     Write-Host "***Or select a specific rule to be actioned***           "
     allRulesMenu
@@ -169,7 +225,7 @@ function updateGPOAll($value) {
     }    
 }
 
-function subMenu ($valueNUmber) {
+function actionMenu ($valueNUmber) {
     $valueNUmber -= 1
     Write-Host
     Write-Host "Select an action for the rule:" $rulesID[$valueNUmber][1]
@@ -215,9 +271,10 @@ function mainMenu {
         showMainMenu
         $inputOption = Read-Host "Please enter your option"
         switch ($inputOption) {            
-            { 1..$rulesID.Count -contains $_ } { subMenu($inputOption) }
+            { 1..$rulesID.Count -contains $_ } { actionMenu($inputOption) }
             { 'A', 'D', 'E', 'W' -contains $_ } { updateGPOAll $inputOption }
             'P' { appliedRulesStatus }
+            'X' { exclusionMenu }
             'Q' {
                 Write-Host
                 Write-Host "Thanks, email me on kaledaljebur@gmail.com for any questions or suggestions ... " 
