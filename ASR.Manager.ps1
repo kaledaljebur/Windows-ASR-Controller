@@ -228,6 +228,6 @@ function elevatedPrivilegesCheck {
         exit
     }     
 }
-elevatedPrivilegesCheck
+# elevatedPrivilegesCheck
 mainMenu
 
