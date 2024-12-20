@@ -109,7 +109,7 @@ function showMainMenu {
     Write-Host "**************************Main Menu**************************"
     Write-Host "*******Select an action from this menu*******            "
     Write-Host "  Q: Quit the program"
-    Write-Host "  P: Print the status of all applied rules"
+    Write-Host "  P: Print the status of all applied rules, and export in Jason file"
     Write-Host "  E: Enable all rules"
     Write-Host "  D: Create disabled rules, or disable all available rules"
     Write-Host "  A: Put all rules in Audit mode"
@@ -183,7 +183,7 @@ function subMenu ($valueNUmber) {
     Write-Host "**************************************"
     Write-Host
     $inputOption = Read-Host "Please enter your option"
-    switch -Regex ($inputOption) {            
+    switch ($inputOption) {            
         { 'E', 'D', 'A', 'W' -contains $_ } { updateGPO $rulesID[$valueNUmber][2] $inputOption }
         # { 0..2 -contains $_ } { updateGPO $rulesID[$valueNUmber][2] $inputOption }
         # '6' { updateGPO $rulesID[$valueNUmber][2] $inputOption }
@@ -214,7 +214,7 @@ function mainMenu {
     while ($true) {
         showMainMenu
         $inputOption = Read-Host "Please enter your option"
-        switch -Regex ($inputOption) {            
+        switch ($inputOption) {            
             { 1..$rulesID.Count -contains $_ } { subMenu($inputOption) }
             { 'A', 'D', 'E', 'W' -contains $_ } { updateGPOAll $inputOption }
             'P' { appliedRulesStatus }
