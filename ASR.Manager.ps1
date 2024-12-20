@@ -55,7 +55,8 @@ function ruleIDSearch($value) {
 function appliedRulesStatus {
     Write-Host
     Write-Host "Make sure the window is wide enough to see full table, you may need to re-print!"
-    Write-Host "If no output, then no rules been added before, you can start by disable all rules, then print again."
+    Write-Host "If no output, then no rules been added before, you can select ""Create and disable all rules"""
+    Write-Host "from the Main Menu, then print again."
     Write-Host
     $asrRules = Get-MpPreference
     $ruleActions = $asrRules.AttackSurfaceReductionRules_Actions
@@ -93,12 +94,15 @@ function allRulesMenu {
 function showMenu {
     # Clear-Host
     Write-Host
-    Write-Host "********************Select from this menu********************"
-    Write-Host "Q: Quit"
+    Write-Host "**************************Main Menu**************************"
+    Write-Host "     **********Select an action from this menu**********     "
+    Write-Host "Q: Quit the program"
     Write-Host "P: Print the status of all applied rules"
-    Write-Host "E: Enable all"
-    Write-Host "D: Disable all"
-    Write-Host "A: Audit all"    
+    Write-Host "E: Enable all rules"
+    Write-Host "D: Create and disable all rules"
+    Write-Host "A: Put all rules in audit mode"
+    Write-Host
+    Write-Host "     ******Or select a specific rule to be actioned******    "
     allRulesMenu
     Write-Host "*************************************************************"
     Write-Host
@@ -163,13 +167,13 @@ function updateGPOAll($value) {
 function subMenu ($valueNUmber) {
     $valueNUmber -= 1
     Write-Host
-    Write-Host "For the selected rule:" $rulesID[$valueNUmber][1]
-    Write-Host "*****Select action from this menu*****"
-    Write-Host "Q: Quit"
+    Write-Host "Select an action for the rule:" $rulesID[$valueNUmber][1]
+    Write-Host "*************Action Menu*************"
+    Write-Host "Q: Quit the program"
     Write-Host "1: Enable"
     Write-Host "0: Disable"
     Write-Host "2: Audit"
-    Write-Host "B: Back to main menu"
+    Write-Host "B: Back to Main Menu"
     Write-Host "**************************************"
     Write-Host
     $inputOption = Read-Host "Please enter your option"
@@ -193,7 +197,7 @@ function mainMenu {
         showMenu
         $inputOption = Read-Host "Please enter your option"
         switch -Regex ($inputOption) {            
-            { 1..16 -contains $_ } { subMenu($inputOption) }
+            { 1..$rulesID.Count -contains $_ } { subMenu($inputOption) }
             { 'A', 'D', 'E' -contains $_ } { updateGPOAll $inputOption }
             'P' { appliedRulesStatus }
             'Q' {
@@ -206,7 +210,7 @@ function mainMenu {
             }
             default { Write-Host "The entered option is not in the menu, please select from the menu!" }
         }
-        Write-Host "Press any key to to list the menu again ..."
+        Write-Host "Press any key to list the menu again ..."
         $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown") | Out-Null   
     }
 }
