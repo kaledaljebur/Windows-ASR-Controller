@@ -55,8 +55,8 @@ function ruleIDSearch($value) {
 function appliedRulesStatus {
     Write-Host
     Write-Host "Make sure the window is wide enough to see full table, you may need to re-print!"
-    Write-Host "If no output, then no rules been added before, you can select ""Create and disable all rules"""
-    Write-Host "from the Main Menu, then print again."
+    Write-Host "If no output, then no rules been added before."
+    Write-Host "You can select ""D: Create disabled rules"" from the Main Menu, then print again."
     Write-Host
     $asrRules = Get-MpPreference
     $ruleActions = $asrRules.AttackSurfaceReductionRules_Actions
@@ -71,6 +71,7 @@ function appliedRulesStatus {
             '0' { $status = "Disabled" }
             '1' { $status = "Enabled" }
             '2' { $status = "Audit" }
+            '6' { $status = "Warn" }
         }
         $output += @{RuleID = $ruleID; Status = $status; Name = $name }
         # The following table display is slower and it will display when exit:
@@ -87,22 +88,24 @@ function appliedRulesStatus {
 function allRulesMenu {    
     foreach ($item in $rulesID) {
         $result = $item[0] + ": " + $item[1]
-        Write-Host "$result"
+        Write-Host "  $result"
     }
 }
 
-function showMenu {
-    # Clear-Host
+function showMainMenu {
+    Clear-Host
     Write-Host
     Write-Host "**************************Main Menu**************************"
-    Write-Host "     **********Select an action from this menu**********     "
-    Write-Host "Q: Quit the program"
-    Write-Host "P: Print the status of all applied rules"
-    Write-Host "E: Enable all rules"
-    Write-Host "D: Create and disable all rules"
-    Write-Host "A: Put all rules in audit mode"
+    Write-Host "*******Select an action from this menu*******            "
+    Write-Host "  Q: Quit the program"
+    Write-Host "  P: Print the status of all applied rules"
+    Write-Host "  E: Enable all rules"
+    Write-Host "  D: Create disabled rules, or disable all available rules"
+    Write-Host "  A: Put all rules in Audit mode"
+    Write-Host "  W: Put all rules in Warn mode"
+    Write-Host "  H: for help"
     Write-Host
-    Write-Host "     ******Or select a specific rule to be actioned******    "
+    Write-Host "***Or select a specific rule to be actioned***           "
     allRulesMenu
     Write-Host "*************************************************************"
     Write-Host
@@ -110,9 +113,10 @@ function showMenu {
 
 function updateGPO($valueName, $value) {
     switch ($value) {
-        '0' { $action = "Disabled" }
-        '1' { $action = "Enabled" }
-        '2' { $action = "AuditMode" }
+        'D' { $action = "Disabled" }
+        'E' { $action = "Enabled" }
+        'A' { $action = "AuditMode" }
+        'W' { $action = "Warn" }
     }
     # $asrRuleAction = switch ($action) {
     #     "Block"     { [Microsoft.Management.Infrastructure.CimInstance]::Create('Microsoft.Security.Policies.ActionTypes.Block') }
@@ -142,24 +146,30 @@ function updateGPOAll($value) {
     switch ($value) {            
         'A' { 
             for ($i = 0; $i -le $rulesID.Count - 1 ; $i++) {
-                updateGPO $rulesID[$i][2] 2
+                updateGPO $rulesID[$i][2] $value
                 # You can also use the below:
                 # (Get-MpPreference).AttackSurfaceReductionRules_Ids | 
                 # Foreach {Add-MpPreference -AttackSurfaceReductionRules_Ids $_ -AttackSurfaceReductionRules_Actions AuditMode}
             }
-            Write-Host "Done, all rules are in Audit!" 
+            Write-Host "Done, all rules are in Audit mode!" 
         }
         'D' { 
             for ($i = 0; $i -le $rulesID.Count - 1 ; $i++) {
-                updateGPO $rulesID[$i][2] 0
+                updateGPO $rulesID[$i][2] $value
             }
             Write-Host "Done, all rules are Disabled!" 
         }
         'E' { 
             for ($i = 0; $i -le $rulesID.Count - 1 ; $i++) {
-                updateGPO $rulesID[$i][2] 1
+                updateGPO $rulesID[$i][2] $value
             }
             Write-Host "Done, all rules are Enabled!" 
+        }
+        'W' { 
+            for ($i = 0; $i -le $rulesID.Count - 1 ; $i++) {
+                updateGPO $rulesID[$i][2] $value
+            }
+            Write-Host "Done, all rules are Warn mode!" 
         }
     }    
 }
@@ -170,15 +180,18 @@ function subMenu ($valueNUmber) {
     Write-Host "Select an action for the rule:" $rulesID[$valueNUmber][1]
     Write-Host "*************Action Menu*************"
     Write-Host "Q: Quit the program"
-    Write-Host "1: Enable"
-    Write-Host "0: Disable"
-    Write-Host "2: Audit"
+    Write-Host "E: Enable"
+    Write-Host "D: Disable"
+    Write-Host "A: Audit"
+    Write-Host "W: Warn"
     Write-Host "B: Back to Main Menu"
     Write-Host "**************************************"
     Write-Host
     $inputOption = Read-Host "Please enter your option"
     switch -Regex ($inputOption) {            
+        { 'E', 'D', 'A', 'W' -contains $_ } { updateGPO $rulesID[$valueNUmber][2] $inputOption }
         { 0..2 -contains $_ } { updateGPO $rulesID[$valueNUmber][2] $inputOption }
+        # '6' { updateGPO $rulesID[$valueNUmber][2] $inputOption }
         'B' { mainMenu }
         'Q' {
             Write-Host
@@ -192,13 +205,22 @@ function subMenu ($valueNUmber) {
     }    
 }
 
+function helpMenu{
+    Write-Host
+    Write-Host "Source https://learn.microsoft.com/en-us/defender-endpoint/enable-attack-surface-reduction#mdm"
+    Write-Host "0: Disable (Disable the attack surface reduction rule)"
+    Write-Host "1: Block (Enable the attack surface reduction rule)" 
+    Write-Host "2: Audit (Evaluate how the attack surface reduction rule would impact your organization if enabled)"
+    Write-Host "6: Warn (Enable the attack surface reduction rule but allow the end-user to bypass the block)"
+    Write-Host
+}
 function mainMenu {
     while ($true) {
-        showMenu
+        showMainMenu
         $inputOption = Read-Host "Please enter your option"
         switch -Regex ($inputOption) {            
             { 1..$rulesID.Count -contains $_ } { subMenu($inputOption) }
-            { 'A', 'D', 'E' -contains $_ } { updateGPOAll $inputOption }
+            { 'A', 'D', 'E', 'W' -contains $_ } { updateGPOAll $inputOption }
             'P' { appliedRulesStatus }
             'Q' {
                 Write-Host
@@ -208,6 +230,7 @@ function mainMenu {
                 Read-Host
                 exit 
             }
+            'H' {helpMenu}
             default { Write-Host "The entered option is not in the menu, please select from the menu!" }
         }
         Write-Host "Press any key to list the menu again ..."
@@ -228,6 +251,6 @@ function elevatedPrivilegesCheck {
         exit
     }     
 }
-# elevatedPrivilegesCheck
+elevatedPrivilegesCheck
 mainMenu
 
