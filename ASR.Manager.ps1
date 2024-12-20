@@ -16,12 +16,12 @@
 # Local GPO commands available here:
 # https://learn.microsoft.com/en-us/defender-endpoint/enable-attack-surface-reduction#powershell
 ##################
-# The rules can be added here:
+# The rules can be added manually here:
 # Computer Configuration\Policies\Administrative Templates\Windows Components\Microsoft Defender Antivirus
 # \Microsoft Defender Exploit Guard\Attack Surface Reduction	
 
 $rulesID = @(
-    # Disable any not needed rules, no need to edit the program, just make sure only the last rule dont ends comma.
+    # Disable any not needed rules, no need to edit the program, just make sure only the last rule dont ends with comma.
     @("1", "Block abuse of exploited vulnerable signed drivers", "56a863a9-875e-4185-98a7-b882c64b5ce5"),
     @("2", "Block Adobe Reader from creating child processes", "7674ba52-37eb-4a4f-a9a1-f0f9a1619a2c"),
     @("3", "Block all Office applications from creating child processes", "d4f940ab-401b-4efc-aadc-ad5f3c50688a"),
@@ -38,8 +38,8 @@ $rulesID = @(
     @("14", "Block untrusted and unsigned processes that run from USB", "b2b3f03d-6a65-4f7b-a9c7-1c7ef74a9ba4"),
     @("15", "Block Win32 API calls from Office macros", "92e97fa1-2edf-4476-bdd6-9dd0b4dddc7b"),
     @("16", "Use advanced protection against ransomware", "c1db55ab-c21a-4637-bb3f-a12568109d35"),
-    @("18", "Block rebooting machine in Safe Mode (preview)", "33ddedf1-c6e0-47cb-833e-de6133960387"),
-    @("17", "Block use of copied or impersonated system tools (preview)", "c0033c00-d16d-4114-a5a0-dc9b3a7d2ceb"),
+    @("17", "Block rebooting machine in Safe Mode (preview)", "33ddedf1-c6e0-47cb-833e-de6133960387"),
+    @("18", "Block use of copied or impersonated system tools (preview)", "c0033c00-d16d-4114-a5a0-dc9b3a7d2ceb"),
     @("19", "Block Webshell creation for Servers", "a8f5898e-1dc8-49a9-9878-85004b8a61e6")
 )
 
@@ -83,6 +83,17 @@ function appliedRulesStatus {
     }
 
     $output | ForEach { [PSCustomObject]$_ } | Format-Table -AutoSize
+    # Export the status table:
+    
+    if (-not $output.Count -eq 0) {
+        
+        $inputOption = Read-Host "Export the table into Jason format? Y: for yes, or just hit Enter to cancel"
+        if ($inputOption -eq "Y") {
+            ConvertTo-Json -InputObject $output | Out-File -FilePath .\ASR.Manager.json
+            Write-Host "The table has been exported to ASR.Manager.json"
+            Write-Host
+        }
+    }
 }
 
 function allRulesMenu {    
@@ -118,22 +129,6 @@ function updateGPO($valueName, $value) {
         'A' { $action = "AuditMode" }
         'W' { $action = "Warn" }
     }
-    # $asrRuleAction = switch ($action) {
-    #     "Block"     { [Microsoft.Management.Infrastructure.CimInstance]::Create('Microsoft.Security.Policies.ActionTypes.Block') }
-    #     "Audit"     { [Microsoft.Management.Infrastructure.CimInstance]::Create('Microsoft.Security.Policies.ActionTypes.Audit') }
-    #     "Disabled"  { [Microsoft.Management.Infrastructure.CimInstance]::Create('Microsoft.Security.Policies.ActionTypes.Disabled') }
-    #     # default     { throw "Invalid action type: $action" }
-    # }
-    # Set-MpPreference -AttackSurfaceReductionRules_Ids <rule ID> -AttackSurfaceReductionRules_Actions Enabled
-    # Set-MpPreference -AttackSurfaceReductionRules_Ids <rule ID> -AttackSurfaceReductionRules_Actions AuditMode
-    # Set-MpPreference -AttackSurfaceReductionRules_Ids <rule ID> -AttackSurfaceReductionRules_Actions Warn
-    # Set-MpPreference -AttackSurfaceReductionRules_Ids <rule ID> -AttackSurfaceReductionRules_Actions Disabled
-    # Add-MpPreference -AttackSurfaceReductionRules_Ids 56a863a9-875e-4185-98a7-b882c64b5ce5 -AttackSurfaceReductionRules_Actions Enabled
-    # Add-MpPreference -AttackSurfaceReductionRules_Ids $valueName -AttackSurfaceReductionRules_Actions $value
-    # Set-MpPreference -AttackSurfaceReductionRules_Ids be9ba2d9-53ea-4cdc-84e5-9b1eeee46550 -AttackSurfaceReductionRules_Actions $asrRuleAction
-    # Set-MpPreference -AttackSurfaceReductionRules_Ids $valueName.ToString() -AttackSurfaceReductionRules_Actions Disabled
-    # Write-Host $valueName.ToString() $action
-    # Write-Host "Name "$valueName "Action "$action "last "$asrRuleAction
     Add-MpPreference -AttackSurfaceReductionRules_Ids $valueName -AttackSurfaceReductionRules_Actions $action
     $ruleName = ruleIDSearch($valueName)
     Write-Host "RuleID:" $valueName 
@@ -179,18 +174,18 @@ function subMenu ($valueNUmber) {
     Write-Host
     Write-Host "Select an action for the rule:" $rulesID[$valueNUmber][1]
     Write-Host "*************Action Menu*************"
-    Write-Host "Q: Quit the program"
-    Write-Host "E: Enable"
-    Write-Host "D: Disable"
-    Write-Host "A: Audit"
-    Write-Host "W: Warn"
-    Write-Host "B: Back to Main Menu"
+    Write-Host "  Q: Quit the program"
+    Write-Host "  E: Enable"
+    Write-Host "  D: Disable"
+    Write-Host "  A: Audit"
+    Write-Host "  W: Warn"
+    Write-Host "  B: Back to Main Menu"
     Write-Host "**************************************"
     Write-Host
     $inputOption = Read-Host "Please enter your option"
     switch -Regex ($inputOption) {            
         { 'E', 'D', 'A', 'W' -contains $_ } { updateGPO $rulesID[$valueNUmber][2] $inputOption }
-        { 0..2 -contains $_ } { updateGPO $rulesID[$valueNUmber][2] $inputOption }
+        # { 0..2 -contains $_ } { updateGPO $rulesID[$valueNUmber][2] $inputOption }
         # '6' { updateGPO $rulesID[$valueNUmber][2] $inputOption }
         'B' { mainMenu }
         'Q' {
@@ -205,13 +200,14 @@ function subMenu ($valueNUmber) {
     }    
 }
 
-function helpMenu{
+function helpMenu {
     Write-Host
     Write-Host "Source https://learn.microsoft.com/en-us/defender-endpoint/enable-attack-surface-reduction#mdm"
-    Write-Host "0: Disable (Disable the attack surface reduction rule)"
-    Write-Host "1: Block (Enable the attack surface reduction rule)" 
-    Write-Host "2: Audit (Evaluate how the attack surface reduction rule would impact your organization if enabled)"
-    Write-Host "6: Warn (Enable the attack surface reduction rule but allow the end-user to bypass the block)"
+    Write-Host "The action for each rule can be one of the following:"
+    Write-Host "  Disable: its manual value is 0. Disable the attack surface reduction rule."
+    Write-Host "  Block(Enable): its manual value is 1. Block action will enable the attack surface reduction rule." 
+    Write-Host "  Audit: its manual value is 2. Audit action will evaluate how the attack surface reduction rule would impact your organization if enabled."
+    Write-Host "  Warn: its manual value is 6. Enable the attack surface reduction rule but allow the end-user to bypass the block"
     Write-Host
 }
 function mainMenu {
@@ -230,7 +226,7 @@ function mainMenu {
                 Read-Host
                 exit 
             }
-            'H' {helpMenu}
+            'H' { helpMenu }
             default { Write-Host "The entered option is not in the menu, please select from the menu!" }
         }
         Write-Host "Press any key to list the menu again ..."
