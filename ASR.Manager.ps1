@@ -35,12 +35,12 @@ $rulesID = @(
     @("11", "Block Office communication application from creating child processes", "26190899-1602-49e8-8b27-eb1d0a1ce869"),
     @("12", "Block persistence through WMI event subscription", "e6db77e5-3df2-4cf1-b95a-636979351e5b"),
     @("13", "Block process creations originating from PSExec and WMI commands", "d1e49aac-8f56-4280-b9ba-993a6d77406c"),
-    @("14", "Block untrusted and unsigned processes that run from USB", "b2b3f03d-6a65-4f7b-a9c7-1c7ef74a9ba4"),
-    @("15", "Block Win32 API calls from Office macros", "92e97fa1-2edf-4476-bdd6-9dd0b4dddc7b"),
-    @("16", "Use advanced protection against ransomware", "c1db55ab-c21a-4637-bb3f-a12568109d35"),
-    @("17", "Block rebooting machine in Safe Mode (preview)", "33ddedf1-c6e0-47cb-833e-de6133960387"),
-    @("18", "Block use of copied or impersonated system tools (preview)", "c0033c00-d16d-4114-a5a0-dc9b3a7d2ceb"),
-    @("19", "Block Webshell creation for Servers", "a8f5898e-1dc8-49a9-9878-85004b8a61e6")
+    @("14", "Block rebooting machine in Safe Mode (preview)", "33ddedf1-c6e0-47cb-833e-de6133960387"), #Excluded in most guides
+    @("15", "Block untrusted and unsigned processes that run from USB", "b2b3f03d-6a65-4f7b-a9c7-1c7ef74a9ba4"),
+    @("16", "Block use of copied or impersonated system tools (preview)", "c0033c00-d16d-4114-a5a0-dc9b3a7d2ceb"), #Excluded in most guides
+    @("17", "Block Webshell creation for Servers", "a8f5898e-1dc8-49a9-9878-85004b8a61e6"), #Excluded in most guides
+    @("18", "Block Win32 API calls from Office macros", "92e97fa1-2edf-4476-bdd6-9dd0b4dddc7b"),
+    @("19", "Use advanced protection against ransomware", "c1db55ab-c21a-4637-bb3f-a12568109d35")
 )
 
 function ruleIDSearch($value) {
