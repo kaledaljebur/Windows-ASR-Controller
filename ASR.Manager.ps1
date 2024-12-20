@@ -81,7 +81,7 @@ function appliedRulesStatus {
         # }
     }
 
-        $output | ForEach { [PSCustomObject]$_ } | Format-Table -AutoSize
+    $output | ForEach { [PSCustomObject]$_ } | Format-Table -AutoSize
 }
 
 function allRulesMenu {    
@@ -131,7 +131,7 @@ function updateGPO($valueName, $value) {
     # Write-Host $valueName.ToString() $action
     # Write-Host "Name "$valueName "Action "$action "last "$asrRuleAction
     Add-MpPreference -AttackSurfaceReductionRules_Ids $valueName -AttackSurfaceReductionRules_Actions $action
-    $ruleName=ruleIDSearch($valueName)
+    $ruleName = ruleIDSearch($valueName)
     Write-Host "RuleID:" $valueName 
     Write-Host "RuleName:" $ruleName
     Write-Host "Applied status:" $action 
@@ -217,9 +217,8 @@ function mainMenu {
 
 function elevatedPrivilegesCheck {
     $WindowsPrincipal = New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())
-    $notAdmin = $WindowsPrincipal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
-    
-    if (-not $notAdmin) {
+    $AdminPrivileges = $WindowsPrincipal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
+    if (-not $AdminPrivileges) {
         Write-Host
         Write-Host "This program is not running with administrator privileges!"
         Write-Host "Please re-run it with administrator privileges."
