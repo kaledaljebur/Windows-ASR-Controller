@@ -7,7 +7,9 @@
 # Enable all rules.
 # Disable all rules.
 # Audit mode for all rules.
+# Warn mode for all rules.
 # Apply an action for a specific rule.
+# Export and import rules - Jason file format.
 ##################
 # As a requirements:
 # Windows Defender must be enabled.
@@ -53,6 +55,7 @@ function ruleIDSearch($value) {
 }
 
 function appliedRulesStatus {
+    #Print the rules status and export into Jason file
     Write-Host
     Write-Host "Make sure the window is wide enough to see full table, you may need to re-print!"
     Write-Host "If no output, then no rules been added before."
@@ -61,9 +64,11 @@ function appliedRulesStatus {
     $asrRules = Get-MpPreference
     $ruleActions = $asrRules.AttackSurfaceReductionRules_Actions
     $installedRuleIds = $asrRules.AttackSurfaceReductionRules_Ids
-    $output = @()
+    # This line belong to Table display method two
+    # $output = @()
+    Write-Host "Status  Rule Id                              Rule Description"
+    Write-Host "------  -------                              ----------------"
     for ($i = 0; $i -lt $installedRuleIds.Count; $i++) {
-        # The following table display is better that the below disabled one:
         $ruleID = $installedRuleIds[$i]
         $status = $ruleActions[$i]
         $name = ruleIDSearch($installedRuleIds[$i])
@@ -73,19 +78,21 @@ function appliedRulesStatus {
             '2' { $status = "Audit" }
             '6' { $status = "Warn" }
         }
-        $output += @{RuleID = $ruleID; Status = $status; Name = $name }
-        # The following table display is slower and it will display when exit:
+        Write-Host $status $ruleID $name
+        # # Table display method two: this method is faster than method one:
+        # $output += @{RuleID = $ruleID; Status = $status; Name = $name }
+        # # Table display method one: this method is shorter as a code but slow and it will display the content when the program exit:
         # [PSCustomObject]@{
         #     RuleID = $installedRuleIds[$i]
         #     Action = $ruleActions[$i]
         #     Name   = ruleIDSearch($installedRuleIds[$i])
         # }
     }
-    $output | ForEach { [PSCustomObject]$_ } | Format-Table -AutoSize
-    # Export the status table:
-    
+    # This line belong to Table display method two 
+    # $output | ForEach { [PSCustomObject]$_ } | Format-Table -AutoSize
+
+    # Export the status table into Jason:
     if (-not $output.Count -eq 0) {
-        
         $inputOption = Read-Host "Export the table into Jason format? Y: for yes, or just hit Enter to cancel"
         if ($inputOption -eq "Y") {
             ConvertTo-Json -InputObject $output | Out-File -FilePath .\ASR.Manager.json
@@ -102,7 +109,80 @@ function allRulesMenu {
     }
 }
 
-function ruleExclusions ($ruleId, $excluded){    
+function importRulesMenu {
+    Write-Host
+    Write-Host "Make sure the Jason file is located in the same directory of this program, and it should be named ""ASR.Manager.json""" 
+    Write-Host "To see the accepted Jason template, select "" D: Create disabled rules"", then selct "" P: Print the status of all applied rules"" to export in Jason" 
+    Write-Host "The best way is you select the needed configurations from the main menu, then export as Jason, then import in your auther computers"
+    Write-Host
+    Write-Host "*******Select an action from this menu*******            "
+    Write-Host "  Q: Quit the program"
+    Write-Host "  H: Help"
+    Write-Host "  B: Back to main menu"
+    Write-Host "  I: Proceed with importing" 
+    Write-Host
+    $inputOption = Read-Host "Please enter your option"     
+    switch ($inputOption) {            
+        'Q' {
+            Write-Host
+            Write-Host "Thanks, email me on kaledaljebur@gmail.com for any questions or suggestions ... " 
+            Write-Host
+            Write-Output "Press any key to close this window ..."
+            Read-Host
+            exit 
+        }
+        'H' { helpMenu }
+        'B' { mainMenu }
+        'I' { importRules }
+        default { Write-Host "The entered option is not in the menu, please select from the menu!" }
+    }   
+}
+
+function importRules {
+    $jsonPath = ".\ASR.Manager.json"
+    $jsonFile = Get-Content -Path $jsonPath | ConvertFrom-Json
+    $jsonArray = @()
+    foreach ($i in $jsonFile) {
+        $row = @()
+        foreach ($property in $i.PSObject.Properties) {
+            $row += $property.Value
+        }
+        $jsonArray += , $row
+    }
+    
+    if ($jsonArray.Count -eq 0) {
+        Read-Host "Empty Jason file, hit Enter to back for import menu ..."
+        importRulesMenu
+    }
+    else {
+        # List the content of Jason file $jsonArray before applying
+        Write-Host
+        Write-Host "The content of Jason file:"
+        Write-Host "Status  Rule Id                              Rule Description"
+        Write-Host "------  -------                              ----------------"
+        for ($i = 0; $i -le $jsonArray.Count - 1 ; $i++) {
+            Write-Host $jsonArray[$i][0] $jsonArray[$i][1] $jsonArray[$i][2]
+        }
+        # Ask to apply the Jason file
+        Write-Host
+        $inputOption = Read-Host "Apply the imported Json? Y: for yes, Enter: back to import menu"
+        if ($inputOption -eq "Y") {
+            Write-Host
+            Write-Host "Start applying Jason file ..."
+            Write-Host "Status  Rule Id                              Rule Description"
+            Write-Host "------  -------                              ----------------"
+            for ($i = 0; $i -le $jsonArray.Count - 1 ; $i++) {
+                updateGPO $jsonArray[$i][1] $jsonArray[$i][0]
+            }
+            Write-Host 
+            Write-Host "You can selct ""P: Print the status of all applied rules"" from the main menu for verification"
+            Write-Host
+        }
+        else { importRulesMenu }
+    }
+}
+
+function ruleExclusions ($ruleId, $excluded) {    
     Set-MpPreference -AttackSurfaceReductionRules_Ids $ruleId -AttackSurfaceReductionOnlyExclusions -Exclusions $excluded
 }
 
@@ -112,21 +192,20 @@ function rulesExclusionsAll($excluded) {
 }
 
 function rulesExclusionsAllStatus {
-    Read-Host
     Get-MpPreference | Select-Object AttackSurfaceReductionOnlyExclusions  
 }
 
-function exclusionMenu{
+function exclusionMenu {
     while ($true) {
         showExclusionMenu
         $inputOption = Read-Host "Please enter your option"
         switch ($inputOption) {            
-            # { 1..$rulesID.Count -contains $_ } { actionMenu($inputOption) }
-            # { 'A', 'D', 'E', 'W' -contains $_ } { updateGPOAll $inputOption }
-            'P' { rulesExclusionsAllStatus }
+            'P' { rulesExclusionsAllStatus rulesExclusionsAllStatus }
             'B' { mainMenu }
-            'A' {$exclusion = Read-Host "Enter the exclusion value"
-                rulesExclusionsAll $exclusion}
+            'A' {
+                $exclusion = Read-Host "Enter the exclusion value"
+                rulesExclusionsAll $exclusion
+            }
             'Q' {
                 Write-Host
                 Write-Host "Thanks, email me on kaledaljebur@gmail.com for any questions or suggestions ... " 
@@ -148,7 +227,7 @@ function showExclusionMenu {
     Write-Host "************************Exclusion Menu************************"
     Write-Host "*******Select an action from this menu*******            "
     Write-Host "  Q: Quit the program"
-    Write-Host "  H: for help"
+    Write-Host "  H: Help"
     Write-Host "  P: Print the status of all applied exclusions"
     Write-Host "  A: Add exclusion for all rules"
     Write-Host "  B: Back to main menu"  
@@ -164,8 +243,9 @@ function showMainMenu {
     Write-Host "**************************Main Menu**************************"
     Write-Host "*******Select an action from this menu*******            "
     Write-Host "  Q: Quit the program"
-    Write-Host "  H: for help"
+    Write-Host "  H: Help"
     Write-Host "  P: Print the status of all applied rules, and export in Jason file"
+    Write-Host "  I: Import rules' settings from Jason file"
     Write-Host "  X: For exclusion actions" 
     Write-Host "  E: Enable all rules"
     Write-Host "  D: Create disabled rules, or disable all available rules"
@@ -184,13 +264,11 @@ function updateGPO($valueName, $value) {
         'E' { $action = "Enabled" }
         'A' { $action = "AuditMode" }
         'W' { $action = "Warn" }
+        default { $action = $value }
     }
     Add-MpPreference -AttackSurfaceReductionRules_Ids $valueName -AttackSurfaceReductionRules_Actions $action
     $ruleName = ruleIDSearch($valueName)
-    Write-Host "RuleID:" $valueName 
-    Write-Host "RuleName:" $ruleName
-    Write-Host "Applied status:" $action 
-    Write-Host
+    Write-Host $action $valueName $ruleName 
 }
 
 function updateGPOAll($value) {
@@ -274,6 +352,7 @@ function mainMenu {
             { 1..$rulesID.Count -contains $_ } { actionMenu($inputOption) }
             { 'A', 'D', 'E', 'W' -contains $_ } { updateGPOAll $inputOption }
             'P' { appliedRulesStatus }
+            'I' { importRulesMenu }
             'X' { exclusionMenu }
             'Q' {
                 Write-Host
@@ -306,4 +385,3 @@ function elevatedPrivilegesCheck {
 }
 elevatedPrivilegesCheck
 mainMenu
-
