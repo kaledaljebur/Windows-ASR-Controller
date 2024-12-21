@@ -65,9 +65,8 @@ function appliedRulesStatus {
     $ruleActions = $asrRules.AttackSurfaceReductionRules_Actions
     $installedRuleIds = $asrRules.AttackSurfaceReductionRules_Ids
     # This line belong to Table display method two
-    # $output = @()
-    Write-Host "Status  Rule Id                              Rule Description"
-    Write-Host "------  -------                              ----------------"
+    $output = @()
+    tableHeader
     for ($i = 0; $i -lt $installedRuleIds.Count; $i++) {
         $ruleID = $installedRuleIds[$i]
         $status = $ruleActions[$i]
@@ -75,12 +74,12 @@ function appliedRulesStatus {
         switch ($status) {
             '0' { $status = "Disabled" }
             '1' { $status = "Enabled" }
-            '2' { $status = "Audit" }
+            '2' { $status = "AuditMode" }
             '6' { $status = "Warn" }
         }
-        Write-Host $status $ruleID $name
+        Write-Host ("{0,-10}" -f $status) $ruleID $name
         # # Table display method two: this method is faster than method one:
-        # $output += @{RuleID = $ruleID; Status = $status; Name = $name }
+        $output += @{RuleID = $ruleID; Status = $status; Name = $name }
         # # Table display method one: this method is shorter as a code but slow and it will display the content when the program exit:
         # [PSCustomObject]@{
         #     RuleID = $installedRuleIds[$i]
@@ -90,7 +89,6 @@ function appliedRulesStatus {
     }
     # This line belong to Table display method two 
     # $output | ForEach { [PSCustomObject]$_ } | Format-Table -AutoSize
-
     # Export the status table into Jason:
     if (-not $output.Count -eq 0) {
         $inputOption = Read-Host "Export the table into Jason format? Y: for yes, or just hit Enter to cancel"
@@ -158,10 +156,9 @@ function importRules {
         # List the content of Jason file $jsonArray before applying
         Write-Host
         Write-Host "The content of Jason file:"
-        Write-Host "Status  Rule Id                              Rule Description"
-        Write-Host "------  -------                              ----------------"
+        tableHeader
         for ($i = 0; $i -le $jsonArray.Count - 1 ; $i++) {
-            Write-Host $jsonArray[$i][0] $jsonArray[$i][1] $jsonArray[$i][2]
+            Write-Host ("{0,-10}" -f $jsonArray[$i][0]) $jsonArray[$i][1] $jsonArray[$i][2]
         }
         # Ask to apply the Jason file
         Write-Host
@@ -169,8 +166,7 @@ function importRules {
         if ($inputOption -eq "Y") {
             Write-Host
             Write-Host "Start applying Jason file ..."
-            Write-Host "Status  Rule Id                              Rule Description"
-            Write-Host "------  -------                              ----------------"
+            tableHeader
             for ($i = 0; $i -le $jsonArray.Count - 1 ; $i++) {
                 updateGPO $jsonArray[$i][1] $jsonArray[$i][0]
             }
@@ -268,12 +264,18 @@ function updateGPO($valueName, $value) {
     }
     Add-MpPreference -AttackSurfaceReductionRules_Ids $valueName -AttackSurfaceReductionRules_Actions $action
     $ruleName = ruleIDSearch($valueName)
-    Write-Host $action $valueName $ruleName 
+    Write-Host ("{0,-10}" -f $action) $valueName $ruleName 
+}
+
+function tableHeader {
+    Write-Host "Status     Rule Id                              Rule Description"
+    Write-Host "---------  -------                              ----------------"    
 }
 
 function updateGPOAll($value) {
     switch ($value) {            
         'A' { 
+            tableHeader
             for ($i = 0; $i -le $rulesID.Count - 1 ; $i++) {
                 updateGPO $rulesID[$i][2] $value
                 # You can also use the below:
@@ -282,19 +284,19 @@ function updateGPOAll($value) {
             }
             Write-Host "Done, all rules are in Audit mode!" 
         }
-        'D' { 
+        'D' { tableHeader
             for ($i = 0; $i -le $rulesID.Count - 1 ; $i++) {
                 updateGPO $rulesID[$i][2] $value
             }
             Write-Host "Done, all rules are Disabled!" 
         }
-        'E' { 
+        'E' { tableHeader
             for ($i = 0; $i -le $rulesID.Count - 1 ; $i++) {
                 updateGPO $rulesID[$i][2] $value
             }
             Write-Host "Done, all rules are Enabled!" 
         }
-        'W' { 
+        'W' { tableHeader
             for ($i = 0; $i -le $rulesID.Count - 1 ; $i++) {
                 updateGPO $rulesID[$i][2] $value
             }
@@ -318,7 +320,11 @@ function actionMenu ($valueNUmber) {
     Write-Host
     $inputOption = Read-Host "Please enter your option"
     switch ($inputOption) {            
-        { 'E', 'D', 'A', 'W' -contains $_ } { updateGPO $rulesID[$valueNUmber][2] $inputOption }
+        { 'E', 'D', 'A', 'W' -contains $_ } { 
+            tableHeader
+            updateGPO $rulesID[$valueNUmber][2] $inputOption 
+            Write-Host
+        }
         # { 0..2 -contains $_ } { updateGPO $rulesID[$valueNUmber][2] $inputOption }
         # '6' { updateGPO $rulesID[$valueNUmber][2] $inputOption }
         'B' { mainMenu }
