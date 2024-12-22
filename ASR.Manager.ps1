@@ -191,6 +191,21 @@ function rulesExclusionsAllStatus {
     Get-MpPreference | Select-Object AttackSurfaceReductionOnlyExclusions  
 }
 
+function updateGPOSome ($someRules, $selectedAction) {
+    $selectedRulesArray = @()
+    $selectedRulesArray += [regex]::Matches($someRules, '\d+') | ForEach-Object { $_.Value }
+    Write-Host
+    tableHeader
+    for ($i = 0; $i -le $selectedRulesArray.Count - 1 ; $i++)
+    {
+        for ($ii = 0; $ii -le $rulesID.Count - 1 ; $ii++){
+            if ($selectedRulesArray[$i] -eq $rulesID[$ii][0]){
+                updateGPO $rulesID[$ii][2] $selectedAction
+            }
+        }
+    }
+}
+
 function exclusionMenu {
     while ($true) {
         showExclusionMenu
@@ -201,7 +216,7 @@ function exclusionMenu {
             'A' {
                 $exclusion = Read-Host "Enter the exclusion value"
                 rulesExclusionsAll $exclusion
-            }
+            }            
             'Q' {
                 Write-Host
                 Write-Host "Thanks, email me on kaledaljebur@gmail.com for any questions or suggestions ... " 
@@ -242,11 +257,13 @@ function showMainMenu {
     Write-Host "  H: Help"
     Write-Host "  P: Print the status of all applied rules, and export in Jason file"
     Write-Host "  I: Import rules' settings from Jason file"
-    Write-Host "  X: For exclusion actions" 
+    Write-Host "  X: Exclusion actions (still not finished)" 
     Write-Host "  E: Enable all rules"
     Write-Host "  D: Create disabled rules, or disable all available rules"
     Write-Host "  A: Put all rules in Audit mode"
     Write-Host "  W: Put all rules in Warn mode"
+    Write-Host "  S: Apply action on some selected rules"
+    Write-Host "  T: Test the applied rules (still not finished)"
     Write-Host
     Write-Host "***Or select a specific rule to be actioned***           "
     allRulesMenu
@@ -284,19 +301,22 @@ function updateGPOAll($value) {
             }
             Write-Host "Done, all rules are in Audit mode!" 
         }
-        'D' { tableHeader
+        'D' {
+            tableHeader
             for ($i = 0; $i -le $rulesID.Count - 1 ; $i++) {
                 updateGPO $rulesID[$i][2] $value
             }
             Write-Host "Done, all rules are Disabled!" 
         }
-        'E' { tableHeader
+        'E' {
+            tableHeader
             for ($i = 0; $i -le $rulesID.Count - 1 ; $i++) {
                 updateGPO $rulesID[$i][2] $value
             }
             Write-Host "Done, all rules are Enabled!" 
         }
-        'W' { tableHeader
+        'W' {
+            tableHeader
             for ($i = 0; $i -le $rulesID.Count - 1 ; $i++) {
                 updateGPO $rulesID[$i][2] $value
             }
@@ -341,15 +361,56 @@ function actionMenu ($valueNUmber) {
 }
 
 function helpMenu {
+    $outString = @"
+Introduction:
+*************
+There are two ways to run this program:
+1. If you type ".\ASR.Manager.ps1", you will be guided by the main menu.
+2. If you type ".\ASR.Manager.ps1 argumet1 argument2 ... ", see the options in "Arguments section" below, this method could be helpful if there is a command running this program in the end devices.
+Source https://learn.microsoft.com/en-us/defender-endpoint/enable-attack-surface-reduction#mdm"
+The action for each rule can be one of the following:
+Disable: its manual value is 0. Disable the attack surface reduction rule.
+Block(Enable): its manual value is 1. Block action will enable the attack surface reduction rule.
+Audit: its manual value is 2. Audit action will evaluate how the attack surface reduction rule would impact your organization if enabled.
+Warn: its manual value is 6. Enable the attack surface reduction rule but allow the end-user to bypass the block.   
+
+Arguments section:
+******************
+P: Print the installed rules and will ask to export in Jason file.
+   Example: .\ASR.Manager.ps1 p
+   If no output, then no rules been created, you can create diabled rules using ".\ASR.Manager.ps1 D"
+I: Import from Jason file, Jason file should be named "ASR.Manager.jason" located in the same directory.
+   to get the right Jason template, use "".\ASR.Manager.ps1 D"" to create diabled rules, then ".\ASR.Manager.ps1 p" to print the diabled rulen, then select "yes" to export in Jason
+   Example: .\ASR.Manager.ps1 I
+D: Diable all rules.
+   Example: .\ASR.Manager.ps1 D
+E: Enable all rules.
+   Example: .\ASR.Manager.ps1 E
+A: Put all rules in Audit mode.
+   Example: .\ASR.Manager.ps1 A
+W: Put all rules in Warn mode.
+   Example: .\ASR.Manager.ps1 W
+L: List the rules that can be applied.
+   Example: .\ASR.Manager.ps1 L
+{D|E|A|W} [{1..19}[,{1..19}]]: This will apply the action on specefic rule or rules from ".\ASR.Manager.ps1 L"
+   Example: Use ".\ASR.Manager.ps1 L" to see the possible rules, then use ".\ASR.Manager.ps1 A 3,5,7" to put the rules 3,5, and 7 into Audit mode.
+"@
     Write-Host
-    Write-Host "Source https://learn.microsoft.com/en-us/defender-endpoint/enable-attack-surface-reduction#mdm"
-    Write-Host "The action for each rule can be one of the following:"
-    Write-Host "  Disable: its manual value is 0. Disable the attack surface reduction rule."
-    Write-Host "  Block(Enable): its manual value is 1. Block action will enable the attack surface reduction rule." 
-    Write-Host "  Audit: its manual value is 2. Audit action will evaluate how the attack surface reduction rule would impact your organization if enabled."
-    Write-Host "  Warn: its manual value is 6. Enable the attack surface reduction rule but allow the end-user to bypass the block"
+    Write-Host $outString
     Write-Host
 }
+
+function testingMenu {
+    Write-Host
+    Write-Host "
+    https://demo.wd.microsoft.com/Page/ASR2
+    https://learn.microsoft.com/en-us/defender-endpoint/attack-surface-reduction-rules-deployment-test
+    https://www.splunk.com/en_us/blog/security/deploy-test-monitor-mastering-microsoft-defender-asr-with-atomic-techniques-in-splunk.html
+
+    "
+    Write-Host
+}
+
 function mainMenu {
     while ($true) {
         showMainMenu
@@ -360,6 +421,15 @@ function mainMenu {
             'P' { appliedRulesStatus }
             'I' { importRulesMenu }
             'X' { exclusionMenu }
+            'T' { testingMenu }
+            'S' {
+                Write-Host
+                allRulesMenu
+                Write-Host
+                $inputRules = Read-Host "Select rules like 2,4,18"
+                $inputActione = Read-Host "Select action D:Create dsiabled or dsiable the selected, E:Enable, A:Audit, W:Warn"
+                updateGPOSome $inputRules $inputActione 
+            }
             'Q' {
                 Write-Host
                 Write-Host "Thanks, email me on kaledaljebur@gmail.com for any questions or suggestions ... " 
@@ -389,5 +459,86 @@ function elevatedPrivilegesCheck {
         exit
     }     
 }
+
+function argumentsMenu {
+    if ($arguments.Count -eq 1) {
+        switch ($arguments[0]) {
+            { 'H', 'Help', '?' -contains $_ } { helpMenu }
+            'L' {
+                Write-Host
+                Write-Host 
+                Write-Host "#   Rule Id                              Rule Description"
+                Write-Host "--- -------                              ----------------" 
+                for ($i = 0; $i -le $rulesID.Count - 1 ; $i++) {
+                    Write-Host  ("{0,-3}" -f $rulesID[$i][0]) $rulesID[$i][2]  $rulesID[$i][1]
+                }
+                Write-Host
+            }
+            'P' { appliedRulesStatus }
+            'I' {
+                $jsonPath = ".\ASR.Manager.json"
+                $jsonFile = Get-Content -Path $jsonPath | ConvertFrom-Json
+                $jsonArray = @()
+                foreach ($i in $jsonFile) {
+                    $row = @()
+                    foreach ($property in $i.PSObject.Properties) {
+                        $row += $property.Value
+                    }
+                    $jsonArray += , $row
+                }
+    
+                for ($i = 0; $i -le $jsonArray.Count - 1 ; $i++) {
+                    updateGPO $jsonArray[$i][1] $jsonArray[$i][0]
+                } 
+            }
+            { 'D', 'E', 'A', 'W' -contains $_ } { updateGPOAll $arguments[0] }
+            Default {
+                Write-Host 
+                Write-Host "Type "".\ASR.Manager.ps1 H"" to see the help menu, see ""Arguments section"""
+                Write-Host 
+            }
+        }
+    }
+    elseif ($arguments.Count -eq 2) {
+        switch ($arguments[0]) {
+            { 'D', 'E', 'A', 'W' -contains $_ } { 
+                updateGPOSome $arguments[1] $arguments[0]
+
+                # $selectedRules = @()
+                # $selectedRules += [regex]::Matches($arguments[1], '\d+') | ForEach-Object { $_.Value }
+                # for ($i = 0; $i -le $selectedRules.Count - 1 ; $i++)
+                # {
+                #     for ($ii = 0; $ii -le $rulesID.Count - 1 ; $ii++){
+                #         if ($selectedRules[$i] -eq $rulesID[$ii][0]){
+                #             # Write-Host $selectedRules[$i] $rulesID[$ii][2]
+                #             updateGPO $rulesID[$ii][2] $arguments[0]
+                #         }
+                #     }
+                # }
+            }
+            Default {
+                Write-Host 
+                Write-Host "Type "".\ASR.Manager.ps1 H"" to see the help menu, see ""Arguments section"""
+                Write-Host 
+            }
+        }
+    }
+    else {
+        Write-Host 
+        Write-Host "Type "".\ASR.Manager.ps1 H"" to see the help menu, see ""Arguments section"""
+        Write-Host 
+    }
+}
+
+function mainFunction ($arguments) {
+    if ($arguments.Count -eq 0) {
+        mainMenu
+    }
+    else {
+        argumentsMenu
+    }
+}
+
 elevatedPrivilegesCheck
-mainMenu
+# mainMenu
+mainFunction ($args)
