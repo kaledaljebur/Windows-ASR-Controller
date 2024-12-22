@@ -426,8 +426,8 @@ function mainMenu {
                 Write-Host
                 allRulesMenu
                 Write-Host
-                $inputRules = Read-Host "Select rules like 2,4,18"
-                $inputActione = Read-Host "Select action D:Create dsiabled or dsiable the selected, E:Enable, A:Audit, W:Warn"
+                $inputRules = Read-Host "Select rules from the above list, like 2,4,18"
+                $inputActione = Read-Host "Select action; D:Create dsiabled or dsiable the selected, E:Enable, A:Audit, W:Warn"
                 updateGPOSome $inputRules $inputActione 
             }
             'Q' {
