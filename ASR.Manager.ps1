@@ -503,18 +503,6 @@ function argumentsMenu {
         switch ($arguments[0]) {
             { 'D', 'E', 'A', 'W' -contains $_ } { 
                 updateGPOSome $arguments[1] $arguments[0]
-
-                # $selectedRules = @()
-                # $selectedRules += [regex]::Matches($arguments[1], '\d+') | ForEach-Object { $_.Value }
-                # for ($i = 0; $i -le $selectedRules.Count - 1 ; $i++)
-                # {
-                #     for ($ii = 0; $ii -le $rulesID.Count - 1 ; $ii++){
-                #         if ($selectedRules[$i] -eq $rulesID[$ii][0]){
-                #             # Write-Host $selectedRules[$i] $rulesID[$ii][2]
-                #             updateGPO $rulesID[$ii][2] $arguments[0]
-                #         }
-                #     }
-                # }
             }
             Default {
                 Write-Host 
