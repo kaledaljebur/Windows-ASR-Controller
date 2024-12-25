@@ -110,8 +110,8 @@ function allRulesMenu {
 function importRulesMenu {
     Write-Host
     Write-Host "Make sure the Jason file is located in the same directory of this program, and it should be named ""ASR.Manager.json""" 
-    Write-Host "To see the accepted Jason template, select "" D: Create disabled rules"", then selct "" P: Print the status of all applied rules"" to export in Jason" 
-    Write-Host "The best way is you select the needed configurations from the main menu, then export as Jason, then import in your auther computers"
+    Write-Host "To see the accepted Jason template, select "" D: Create disabled rules"", then select "" P: Print the status of all applied rules"" to export in Jason" 
+    Write-Host "The best way is you select the needed configurations from the main menu, then export as Jason, then import in your other computers"
     Write-Host
     Write-Host "*******Select an action from this menu*******            "
     Write-Host "  Q: Quit the program"
@@ -366,7 +366,7 @@ Introduction:
 *************
 There are two ways to run this program:
 1. If you type ".\ASR.Manager.ps1", you will be guided by the main menu.
-2. If you type ".\ASR.Manager.ps1 argumet1 argument2 ... ", see the options in "Arguments section" below, this method could be helpful if there is a command running this program in the end devices.
+2. If you type ".\ASR.Manager.ps1 argument1 argument2 ... ", see the options in "Arguments section" below, this method could be helpful if there is a command running this program in the end devices.
 Source https://learn.microsoft.com/en-us/defender-endpoint/enable-attack-surface-reduction#mdm"
 The action for each rule can be one of the following:
 Disable: its manual value is 0. Disable the attack surface reduction rule.
@@ -378,11 +378,11 @@ Arguments section:
 ******************
 P: Print the installed rules and will ask to export in Jason file.
    Example: .\ASR.Manager.ps1 p
-   If no output, then no rules been created, you can create diabled rules using ".\ASR.Manager.ps1 D"
+   If no output, then no rules been created, you can create disabled rules using ".\ASR.Manager.ps1 D"
 I: Import from Jason file, Jason file should be named "ASR.Manager.jason" located in the same directory.
-   to get the right Jason template, use "".\ASR.Manager.ps1 D"" to create diabled rules, then ".\ASR.Manager.ps1 p" to print the diabled rulen, then select "yes" to export in Jason
+   to get the right Jason template, use "".\ASR.Manager.ps1 D"" to create disabled rules, then ".\ASR.Manager.ps1 p" to print the disabled rules, then select "yes" to export in Jason
    Example: .\ASR.Manager.ps1 I
-D: Diable all rules.
+D: Disable all rules.
    Example: .\ASR.Manager.ps1 D
 E: Enable all rules.
    Example: .\ASR.Manager.ps1 E
@@ -392,7 +392,7 @@ W: Put all rules in Warn mode.
    Example: .\ASR.Manager.ps1 W
 L: List the rules that can be applied.
    Example: .\ASR.Manager.ps1 L
-{D|E|A|W} [{1..19}[,{1..19}]]: This will apply the action on specefic rule or rules from ".\ASR.Manager.ps1 L"
+{D|E|A|W} [{1..19}[,{1..19}]]: This will apply the action on specific rule or rules from ".\ASR.Manager.ps1 L"
    Example: Use ".\ASR.Manager.ps1 L" to see the possible rules, then use ".\ASR.Manager.ps1 A 3,5,7" to put the rules 3,5, and 7 into Audit mode.
 "@
     Write-Host
@@ -427,8 +427,8 @@ function mainMenu {
                 allRulesMenu
                 Write-Host
                 $inputRules = Read-Host "Select rules from the above list, like 2,4,18"
-                $inputActione = Read-Host "Select action; D:Create dsiabled or dsiable the selected, E:Enable, A:Audit, W:Warn"
-                updateGPOSome $inputRules $inputActione 
+                $inputAction = Read-Host "Select action; D:Create disabled or disable the selected, E:Enable, A:Audit, W:Warn"
+                updateGPOSome $inputRules $inputAction 
             }
             'Q' {
                 Write-Host
