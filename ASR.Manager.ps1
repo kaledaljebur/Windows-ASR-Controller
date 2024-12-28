@@ -23,7 +23,7 @@
 # \Microsoft Defender Exploit Guard\Attack Surface Reduction	
 
 $rulesID = @(
-    # Disable any not needed rules, no need to edit the program, just make sure only the last rule dont ends with comma.
+    # Disable any not needed rules, no need to edit the program, just make sure only the last rule dont ends with comma and the sequence number is correct.
     @("1", "Block abuse of exploited vulnerable signed drivers", "56a863a9-875e-4185-98a7-b882c64b5ce5"),
     @("2", "Block Adobe Reader from creating child processes", "7674ba52-37eb-4a4f-a9a1-f0f9a1619a2c"),
     @("3", "Block all Office applications from creating child processes", "d4f940ab-401b-4efc-aadc-ad5f3c50688a"),
@@ -37,12 +37,12 @@ $rulesID = @(
     @("11", "Block Office communication application from creating child processes", "26190899-1602-49e8-8b27-eb1d0a1ce869"),
     @("12", "Block persistence through WMI event subscription", "e6db77e5-3df2-4cf1-b95a-636979351e5b"),
     @("13", "Block process creations originating from PSExec and WMI commands", "d1e49aac-8f56-4280-b9ba-993a6d77406c"),
-    @("14", "Block rebooting machine in Safe Mode (preview)", "33ddedf1-c6e0-47cb-833e-de6133960387"), #Excluded in most guides
-    @("15", "Block untrusted and unsigned processes that run from USB", "b2b3f03d-6a65-4f7b-a9c7-1c7ef74a9ba4"),
-    @("16", "Block use of copied or impersonated system tools (preview)", "c0033c00-d16d-4114-a5a0-dc9b3a7d2ceb"), #Excluded in most guides
-    @("17", "Block Webshell creation for Servers", "a8f5898e-1dc8-49a9-9878-85004b8a61e6"), #Excluded in most guides
-    @("18", "Block Win32 API calls from Office macros", "92e97fa1-2edf-4476-bdd6-9dd0b4dddc7b"),
-    @("19", "Use advanced protection against ransomware", "c1db55ab-c21a-4637-bb3f-a12568109d35")
+    @("14", "Block untrusted and unsigned processes that run from USB", "b2b3f03d-6a65-4f7b-a9c7-1c7ef74a9ba4"),
+    @("15", "Block Win32 API calls from Office macros", "92e97fa1-2edf-4476-bdd6-9dd0b4dddc7b"),
+    @("16", "Use advanced protection against ransomware", "c1db55ab-c21a-4637-bb3f-a12568109d35"),
+    @("17", "Block rebooting machine in Safe Mode (preview)", "33ddedf1-c6e0-47cb-833e-de6133960387"), #Excluded in most guides, it is the 14th rule in Microsoft
+    @("18", "Block use of copied or impersonated system tools (preview)", "c0033c00-d16d-4114-a5a0-dc9b3a7d2ceb"), #Excluded in most guides, it is the 16th rule in Microsoft
+    @("19", "Block Webshell creation for Servers", "a8f5898e-1dc8-49a9-9878-85004b8a61e6") #Excluded in most guides, , it is the 17th rule in Microsoft
 )
 
 function ruleIDSearch($value) {
@@ -370,7 +370,7 @@ There are two ways to run this program:
 Source https://learn.microsoft.com/en-us/defender-endpoint/enable-attack-surface-reduction#mdm"
 The action for each rule can be one of the following:
 Disable: its manual value is 0. Disable the attack surface reduction rule.
-Block(Enable): its manual value is 1. Block action will enable the attack surface reduction rule.
+Block(rule enable): its manual value is 1. Block action will enable the attack surface reduction rule.
 Audit: its manual value is 2. Audit action will evaluate how the attack surface reduction rule would impact your organization if enabled.
 Warn: its manual value is 6. Enable the attack surface reduction rule but allow the end-user to bypass the block.   
 
