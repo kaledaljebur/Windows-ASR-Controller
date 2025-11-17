@@ -1,0 +1,9 @@
+README.md
+pyproject.toml
+windows_asr_controller/__init__.py
+windows_asr_controller/app.py
+windows_asr_controller.egg-info/PKG-INFO
+windows_asr_controller.egg-info/SOURCES.txt
+windows_asr_controller.egg-info/dependency_links.txt
+windows_asr_controller.egg-info/entry_points.txt
+windows_asr_controller.egg-info/top_level.txt

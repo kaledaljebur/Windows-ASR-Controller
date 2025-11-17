@@ -1,0 +1,2 @@
+[console_scripts]
+windows-asr-controller = windows_asr_controller.app:main

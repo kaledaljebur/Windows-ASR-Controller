@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "windows-asr-controller"
+version = "0.1.0"
+description = "Windows ASR Controller – GUI utility for managing Microsoft Defender Attack Surface Reduction rules."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+    { name = "Kaled Aljebur"}
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/kaledaljebur/Windows-ASR-Controller"
+Source = "https://github.com/kaledaljebur/Windows-ASR-Controller"
+Issues = "https://github.com/kaledaljebur/Windows-ASR-Controller"
+
+# This creates a console command: windows-asr-controller
+[project.scripts]
+windows-asr-controller = "windows_asr_controller.app:main"
+
+[tool.setuptools]
+license-files = []

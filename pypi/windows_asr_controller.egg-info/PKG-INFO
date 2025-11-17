@@ -1,0 +1,101 @@
+Metadata-Version: 2.4
+Name: windows-asr-controller
+Version: 0.1.0
+Summary: Windows ASR Controller – GUI utility for managing Microsoft Defender Attack Surface Reduction rules.
+Author-email: Kaled Aljebur
+License: MIT
+Project-URL: Homepage, https://github.com/kaledaljebur/Windows-ASR-Controller
+Project-URL: Source, https://github.com/kaledaljebur/Windows-ASR-Controller
+Project-URL: Issues, https://github.com/kaledaljebur/Windows-ASR-Controller/issues
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+
+# Windows ASR Controller
+*A graphical utility for managing Microsoft Defender Attack Surface Reduction (ASR) rules.*
+
+Windows ASR Controller is a lightweight GUI tool that allows personal users, students, and cybersecurity educators to easily configure Microsoft Defender's **Attack Surface Reduction** rules without using PowerShell manually.
+
+The [repository](https://github.com/kaledaljebur/Windows-ASR-Controller) contains **three versions** of the tool:
+
+- **🟦 EXE Version:** Standalone Windows executable (no Python required)  
+- **🐍 Python Version:** Installable via PyPI (`windows-asr-controller`)  
+- **📜 PS1 Version:** Original PowerShell ASR Manager script  
+
+---
+
+## 🚀 Features
+- View all ASR rules and their current modes  
+- Enable, disable, audit, or warn any ASR rule  
+- Apply actions to all rules or selected rules  
+- Import and export rule configurations in JSON format  
+- GUI and PowerShell versions  
+- Uses official Microsoft Defender cmdlets under the hood  
+- Suitable for unmanaged / personal Windows devices  
+- No internet access required once installed  
+
+---
+## 📦 Installation (PyPI Version)
+
+Install using pip:
+
+```bash
+py -m pip install windows-asr-controller
+```
+
+Run the application in admin CMD:
+
+```bash
+py -m windows-asr-controller
+```
+
+No additional libraries are required — only Python's standard library.
+
+---
+
+## 🖥️ Windows EXE Version (Standalone)
+
+A prebuilt executable is included in the repository:
+
+[windows_asr_controller.exe](https://github.com/kaledaljebur/Windows-ASR-Controller/tree/main/dist/)
+
+
+Just double-click to launch.  
+Windows will display a **UAC prompt** because ASR configuration requires administrator privileges.
+
+---
+
+## 📜 PowerShell Version (PS1)
+
+The repository also includes the PowerShell edition:
+
+
+[Windows-ASR-Controller.ps1](https://github.com/kaledaljebur/Windows-ASR-Controller)
+
+
+This script provides a full menu interface for managing ASR rules.
+
+---
+
+## 🛡️ Requirements
+- Windows 10 or Windows 11  
+- Administrator privileges  
+- **Microsoft Defender Antivirus must be enabled**  
+  - ASR rules do *not* work if Defender is disabled or replaced  
+- Python 3.8+ (for the PyPI version)
+
+---
+
+## ❗ Important Notes
+- This tool does not modify Group Policy or Intune settings.  
+- It is designed for **local, non-domain-joined** Windows machines.  
+- If Defender is disabled, ASR rules will not take effect.  
+
+---
+
+## 📝 License
+Released under the **MIT License** — free for personal, educational, and commercial use.
+
+---
+
+## 🙋 Support
+For questions, improvements, or issues, please open a GitHub issue or contact the author.
