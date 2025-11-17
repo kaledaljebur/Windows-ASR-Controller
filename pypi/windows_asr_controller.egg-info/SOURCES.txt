@@ -1,6 +1,7 @@
 README.md
 pyproject.toml
 windows_asr_controller/__init__.py
+windows_asr_controller/__main__.py
 windows_asr_controller/app.py
 windows_asr_controller.egg-info/PKG-INFO
 windows_asr_controller.egg-info/SOURCES.txt

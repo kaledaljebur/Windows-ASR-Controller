@@ -33,7 +33,7 @@ py -m pip install windows-asr-controller
 Run the application in admin CMD:
 
 ```bash
-py -m windows-asr-controller
+py -m windows_asr_controller
 ```
 
 No additional libraries are required — only Python's standard library.
